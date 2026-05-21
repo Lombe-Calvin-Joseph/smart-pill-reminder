@@ -1,22 +1,25 @@
 # Smart Pill Reminder and Medicine Tracker
 
-An IoT device built on ESP8266 (NodeMCU) that reminds patients to take medication,
-detects pill box opening, and alerts caregivers via mobile if a dose is missed.
+An Arduino Uno device that reminds patients to take medication at scheduled times,
+detects pill box opening, and logs all events to the Serial Monitor.
 
 ## Quick Start
 
 1. Open this folder in VS Code with PlatformIO installed
-2. Edit `src/main.cpp` – fill in WiFi, Blynk, and ThingSpeak credentials
-3. Wire components per `docs/circuit_diagram.md`
-4. Click Build → Upload
-5. Open Serial Monitor at 115200 baud
+2. Wire components per `docs/circuit_diagram.md`
+3. Click Build → Upload
+4. Open Serial Monitor at **9600 baud**
 
 ## File Structure
 
 ```
 SmartPillReminder/
 ├── src/
-│   └── main.cpp              ← All firmware code
+│   └── main.cpp              ← Firmware (Arduino Uno)
+├── wokwi/
+│   ├── sketch.ino            ← Wokwi simulation sketch
+│   └── diagram.json          ← Wokwi circuit diagram
+├── diagram.json              ← Root Wokwi diagram (same as wokwi/)
 ├── docs/
 │   ├── circuit_diagram.md    ← Wiring tables and ASCII diagrams
 │   ├── setup_instructions.md ← Step-by-step setup guide
@@ -27,16 +30,17 @@ SmartPillReminder/
 
 ## Hardware
 
-| Pin  | GPIO | Component         |
-|------|------|-------------------|
-| D1   | 5    | Buzzer            |
-| D2   | 4    | LED Red (morning) |
-| D3   | 0    | LED Yellow (noon) |
-| D4   | 2    | LED Green (eve)   |
-| D5   | 14   | Pill box switch   |
-| D6   | 12   | Confirm button    |
-| D7   | 13   | Snooze button     |
-| D1/D2| 5/4  | DS3231 SCL/SDA    |
+| Pin | Component              |
+|-----|------------------------|
+| D2  | LED Green (evening)    |
+| D3  | LED Yellow (afternoon) |
+| D4  | LED Red (morning)      |
+| D5  | Active Buzzer          |
+| D6  | Snooze Button          |
+| D7  | Confirm Button         |
+| D8  | Pill Box Switch        |
+| A4  | DS3231 SDA (I2C)       |
+| A5  | DS3231 SCL (I2C)       |
 
 ## Default Schedule
 
@@ -52,15 +56,17 @@ Change in `main.cpp` → `PILL_HOUR[]` and `PILL_MINUTE[]` arrays.
 
 - Reminder triggers buzzer + LED at scheduled time
 - Patient opens pill box OR presses confirm → logged as **taken**
-- Snooze button → delays reminder by 10 minutes
-- No response within 5 minutes → logged as **missed**, caregiver alerted via Blynk
-- All events logged to ThingSpeak (Field 1/2/3 = Morning/Afternoon/Evening)
+- Snooze button → delays reminder by 10 minutes (max 3 snoozes)
+- No response within 5 minutes → logged as **missed**
+- All events printed to Serial Monitor at 9600 baud
 - States reset automatically at midnight each day
+
+## Wokwi Simulation
+
+Open `wokwi/diagram.json` at [wokwi.com](https://wokwi.com) to simulate.
+The RTC is pre-set to 07:59:50 so the morning reminder fires ~10 seconds after start.
 
 ## Dependencies
 
-All auto-installed by PlatformIO via `platformio.ini`:
+Auto-installed by PlatformIO via `platformio.ini`:
 - RTClib (Adafruit)
-- Blynk
-- ThingSpeak
-- NTPClient

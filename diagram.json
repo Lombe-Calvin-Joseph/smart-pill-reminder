@@ -3,53 +3,52 @@
   "author": "Smart Pill Reminder",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-nodemcu-v2", "id": "esp", "top": 80, "left": 20, "attrs": {} },
+    { "type": "wokwi-arduino-uno", "id": "uno", "top": 80, "left": 20, "attrs": {} },
 
-    { "type": "wokwi-ds1307", "id": "rtc1", "top": 20, "left": 340, "attrs": { "datetime": "2026-05-21 07:59:50" } },
+    { "type": "wokwi-ds1307",     "id": "rtc1",       "top": 20,  "left": 380, "attrs": { "datetime": "2026-05-21 07:59:50" } },
+    { "type": "wokwi-buzzer",     "id": "buz1",       "top": 20,  "left": 520, "attrs": { "volume": "0.5" } },
 
-    { "type": "wokwi-buzzer",  "id": "buz1", "top": 20, "left": 500, "attrs": { "volume": "0.5" } },
+    { "type": "wokwi-resistor",   "id": "r1",         "top": 160, "left": 360, "attrs": { "value": "220" }, "rotate": 90 },
+    { "type": "wokwi-led",        "id": "led_red",    "top": 140, "left": 440, "attrs": { "color": "red",    "label": "Morning"   } },
 
-    { "type": "wokwi-resistor", "id": "r1", "top": 160, "left": 340, "attrs": { "value": "220" }, "rotate": 90 },
-    { "type": "wokwi-led",      "id": "led_red",    "top": 140, "left": 420, "attrs": { "color": "red",    "label": "Morning"   } },
+    { "type": "wokwi-resistor",   "id": "r2",         "top": 220, "left": 360, "attrs": { "value": "220" }, "rotate": 90 },
+    { "type": "wokwi-led",        "id": "led_yellow", "top": 200, "left": 440, "attrs": { "color": "yellow", "label": "Afternoon" } },
 
-    { "type": "wokwi-resistor", "id": "r2", "top": 220, "left": 340, "attrs": { "value": "220" }, "rotate": 90 },
-    { "type": "wokwi-led",      "id": "led_yellow", "top": 200, "left": 420, "attrs": { "color": "yellow", "label": "Afternoon" } },
+    { "type": "wokwi-resistor",   "id": "r3",         "top": 280, "left": 360, "attrs": { "value": "220" }, "rotate": 90 },
+    { "type": "wokwi-led",        "id": "led_green",  "top": 260, "left": 440, "attrs": { "color": "green",  "label": "Evening"   } },
 
-    { "type": "wokwi-resistor", "id": "r3", "top": 280, "left": 340, "attrs": { "value": "220" }, "rotate": 90 },
-    { "type": "wokwi-led",      "id": "led_green",  "top": 260, "left": 420, "attrs": { "color": "green",  "label": "Evening"   } },
-
-    { "type": "wokwi-pushbutton", "id": "btn_pillbox", "top": 340, "left": 340, "attrs": { "color": "blue",   "label": "Pill Box" } },
-    { "type": "wokwi-pushbutton", "id": "btn_confirm", "top": 400, "left": 340, "attrs": { "color": "green",  "label": "Confirm"  } },
-    { "type": "wokwi-pushbutton", "id": "btn_snooze",  "top": 460, "left": 340, "attrs": { "color": "yellow", "label": "Snooze"   } }
+    { "type": "wokwi-pushbutton", "id": "btn_pillbox","top": 340, "left": 360, "attrs": { "color": "blue",   "label": "Pill Box"  } },
+    { "type": "wokwi-pushbutton", "id": "btn_confirm","top": 400, "left": 360, "attrs": { "color": "green",  "label": "Confirm"   } },
+    { "type": "wokwi-pushbutton", "id": "btn_snooze", "top": 460, "left": 360, "attrs": { "color": "yellow", "label": "Snooze"    } }
   ],
   "connections": [
-    ["esp:3V3",  "rtc1:VCC", "red",   ["h20"]],
-    ["esp:GND",  "rtc1:GND", "black", ["h10"]],
-    ["esp:D1",   "rtc1:SCL", "blue",  []],
-    ["esp:D2",   "rtc1:SDA", "green", []],
+    ["uno:5V",  "rtc1:VCC", "red",   []],
+    ["uno:GND", "rtc1:GND", "black", []],
+    ["uno:A5",  "rtc1:SCL", "blue",  []],
+    ["uno:A4",  "rtc1:SDA", "green", []],
 
-    ["esp:D1",   "buz1:1",   "orange", []],
-    ["esp:GND",  "buz1:2",   "black",  []],
+    ["uno:5",   "buz1:1",   "orange", []],
+    ["uno:GND", "buz1:2",   "black",  []],
 
-    ["esp:D2",   "r1:1",     "red",   []],
-    ["r1:2",     "led_red:A","red",   []],
-    ["led_red:K","esp:GND",  "black", []],
+    ["uno:4",   "r1:1",      "red",   []],
+    ["r1:2",    "led_red:A", "red",   []],
+    ["led_red:K","uno:GND",  "black", []],
 
-    ["esp:D3",      "r2:1",        "yellow", []],
+    ["uno:3",       "r2:1",        "yellow", []],
     ["r2:2",        "led_yellow:A","yellow", []],
-    ["led_yellow:K","esp:GND",     "black",  []],
+    ["led_yellow:K","uno:GND",     "black",  []],
 
-    ["esp:D4",     "r3:1",       "green", []],
+    ["uno:2",      "r3:1",       "green", []],
     ["r3:2",       "led_green:A","green", []],
-    ["led_green:K","esp:GND",    "black", []],
+    ["led_green:K","uno:GND",    "black", []],
 
-    ["esp:D5", "btn_pillbox:1.l", "blue",   []],
-    ["btn_pillbox:2.l", "esp:GND","black",  []],
+    ["uno:8",  "btn_pillbox:1.l","blue",   []],
+    ["btn_pillbox:2.l","uno:GND","black",  []],
 
-    ["esp:D6", "btn_confirm:1.l", "purple", []],
-    ["btn_confirm:2.l", "esp:GND","black",  []],
+    ["uno:7",  "btn_confirm:1.l","purple", []],
+    ["btn_confirm:2.l","uno:GND","black",  []],
 
-    ["esp:D7", "btn_snooze:1.l",  "orange", []],
-    ["btn_snooze:2.l",  "esp:GND","black",  []]
+    ["uno:6",  "btn_snooze:1.l", "orange", []],
+    ["btn_snooze:2.l","uno:GND", "black",  []]
   ]
 }

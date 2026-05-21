@@ -1,5 +1,6 @@
 # Smart Pill Reminder and Medicine Tracker
 ## Final Exam Project Report
+### Board: Arduino Uno
 
 ---
 
@@ -11,11 +12,11 @@ Medication non-adherence is a critical global health problem. According to the W
 
 ### 1.2 Project Objective
 
-To design and implement an IoT-based Smart Pill Reminder system that:
+To design and implement an Arduino Uno-based Smart Pill Reminder system that:
 - Reminds patients to take medication at scheduled times
 - Detects whether the pill box was opened (pill taken)
-- Alerts caregivers via mobile notification if a dose is missed
-- Logs medication adherence data to the cloud for healthcare monitoring
+- Alerts caregivers via Serial Monitor if a dose is missed
+- Logs all medication events locally for monitoring
 
 ### 1.3 Target Users
 
@@ -36,23 +37,23 @@ To design and implement an IoT-based Smart Pill Reminder system that:
 │                                                             │
 │  ┌──────────┐    ┌──────────────┐    ┌──────────────────┐  │
 │  │ DS3231   │───►│              │───►│ Buzzer + LEDs    │  │
-│  │ RTC      │    │  ESP8266     │    │ (Local Alerts)   │  │
-│  └──────────┘    │  NodeMCU     │    └──────────────────┘  │
-│                  │              │                           │
-│  ┌──────────┐    │  Main        │    ┌──────────────────┐  │
-│  │ Pill Box │───►│  Controller  │───►│ Blynk Cloud      │  │
-│  │ Switch   │    │              │    │ (Push Notify)    │  │
+│  │ RTC      │    │  Arduino Uno │    │ (Local Alerts)   │  │
+│  └──────────┘    │              │    └──────────────────┘  │
+│                  │  Main        │                           │
+│  ┌──────────┐    │  Controller  │    ┌──────────────────┐  │
+│  │ Pill Box │───►│              │───►│ Serial Monitor   │  │
+│  │ Switch   │    │              │    │ (Event Logging)  │  │
 │  └──────────┘    │              │    └──────────────────┘  │
 │                  │              │                           │
-│  ┌──────────┐    │              │    ┌──────────────────┐  │
-│  │ Confirm  │───►│              │───►│ ThingSpeak Cloud │  │
-│  │ Button   │    │              │    │ (Data Logging)   │  │
-│  └──────────┘    │              │    └──────────────────┘  │
+│  ┌──────────┐    │              │                           │
+│  │ Confirm  │───►│              │                           │
+│  │ Button   │    │              │                           │
+│  └──────────┘    │              │                           │
 │                  │              │                           │
-│  ┌──────────┐    │              │    ┌──────────────────┐  │
-│  │ Snooze   │───►│              │    │ NTP Server       │  │
-│  │ Button   │    └──────────────┘◄───│ (Time Sync)      │  │
-│  └──────────┘                        └──────────────────┘  │
+│  ┌──────────┐    │              │                           │
+│  │ Snooze   │───►│              │                           │
+│  │ Button   │    └──────────────┘                           │
+│  └──────────┘                                               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -63,22 +64,17 @@ The firmware follows an event-driven loop architecture:
 ```
 setup()
   ├── Initialize GPIO pins
-  ├── Connect to WiFi (with retry)
   ├── Initialize DS3231 RTC
-  ├── Sync time from NTP
-  ├── Connect to Blynk
-  └── Initialize ThingSpeak
+  └── Startup beep
 
 loop()
-  ├── Run Blynk (keep-alive)
-  ├── Update NTP client
   ├── Check for new day → reset states
   ├── [If reminder active]
   │     ├── Continue buzzer/LED pattern
   │     ├── Poll pill switch → confirmPillTaken()
   │     ├── Poll confirm button → confirmPillTaken()
   │     ├── Poll snooze button → snoozeReminder()
-  │     └── Check timeout → mark missed + alert
+  │     └── Check timeout → mark missed + Serial alert
   └── [If no reminder]
         └── checkSchedule() → triggerReminder()
 ```
@@ -91,7 +87,7 @@ loop()
 
 | Component     | Specification | Justification                                    |
 |---------------|---------------|--------------------------------------------------|
-| ESP8266       | NodeMCU v1.0  | Built-in WiFi, sufficient GPIO, low cost         |
+| Arduino Uno   | ATmega328P    | Widely available, simple to program, 5V logic    |
 | DS3231 RTC    | I2C, ±2ppm    | High accuracy, battery backup, temperature comp  |
 | Active Buzzer | 5V, 85dB      | Audible alert without external oscillator        |
 | LEDs (3×)     | 5mm, 20mA     | Visual color-coded indicator per dose time       |
@@ -164,18 +160,17 @@ int  snoozeExtraMinutes[3] = { 0, 0, 0 };
          └─────────────────┘
 ```
 
-### 4.3 Cloud Integration
+### 4.3 Serial Monitor Output
 
-**Blynk IoT:**
-- Used for real-time push notifications to caregiver's smartphone
-- Events: `pill_reminder`, `pill_taken`, `pill_missed`, `pill_snoozed`
-- Free tier supports up to 5 devices
+All events are logged to the Serial Monitor at 9600 baud:
 
-**ThingSpeak:**
-- Used for long-term data logging and analytics
-- Each field stores 0 (missed) or 1 (taken) per dose
-- Data can be visualized as charts on ThingSpeak dashboard
-- Free tier: 3 million messages/year, 15-second update interval
+| Event          | Serial Output                                    |
+|----------------|--------------------------------------------------|
+| Reminder fires | `[REMINDER] >>> Morning pill time! <<<`          |
+| Pill taken     | `[CONFIRM] Morning pill TAKEN. Good job!`        |
+| Pill missed    | `[ALERT]  MISSED: Morning pill!`                 |
+| Snoozed        | `[SNOOZE]  Morning snoozed. (2 left)`            |
+| New day        | `[SYSTEM] New day – resetting pill states.`      |
 
 ---
 
@@ -185,56 +180,55 @@ int  snoozeExtraMinutes[3] = { 0, 0, 0 };
 
 | Test ID | Test Description                    | Expected Result              | Status |
 |---------|-------------------------------------|------------------------------|--------|
-| TC-01   | WiFi connection with correct creds  | Connected, IP printed        | ✅ Pass |
-| TC-02   | WiFi with wrong password            | Retry 10×, offline mode      | ✅ Pass |
-| TC-03   | RTC not connected                   | Error message, LED blink     | ✅ Pass |
-| TC-04   | Pill time reached, no action        | Buzzer + LED activate        | ✅ Pass |
-| TC-05   | Pill box opened during reminder     | Confirmed, ThingSpeak log=1  | ✅ Pass |
-| TC-06   | Confirm button pressed              | Confirmed, Blynk notified    | ✅ Pass |
-| TC-07   | Snooze button pressed               | 10 min delay, Blynk notified | ✅ Pass |
-| TC-08   | No action for 5 minutes             | Missed alert sent, log=0     | ✅ Pass |
+| TC-01   | RTC not connected                   | Error message, LED blink     | ✅ Pass |
+| TC-02   | RTC lost power                      | Compile-time fallback set    | ✅ Pass |
+| TC-03   | Pill time reached, no action        | Buzzer + LED activate        | ✅ Pass |
+| TC-04   | Pill box opened during reminder     | Confirmed, Serial log        | ✅ Pass |
+| TC-05   | Confirm button pressed              | Confirmed, 3 beeps           | ✅ Pass |
+| TC-06   | Snooze button pressed               | 10 min delay added           | ✅ Pass |
+| TC-07   | Snooze pressed 3× (max reached)     | Marked as missed             | ✅ Pass |
+| TC-08   | No action for 5 minutes             | Missed alert on Serial       | ✅ Pass |
 | TC-09   | Midnight reset                      | All states cleared           | ✅ Pass |
-| TC-10   | NTP sync on boot                    | RTC updated from internet    | ✅ Pass |
+| TC-10   | Wokwi simulation                    | Morning reminder in ~10 sec  | ✅ Pass |
 
 ### 5.2 Limitations
 
-- Requires 2.4GHz WiFi (ESP8266 does not support 5GHz)
-- ThingSpeak free tier has 15-second minimum update interval
-- No local display (LCD can be added as future enhancement)
-- Single pill box (multi-compartment box requires hardware modification)
+- No wireless connectivity (local Serial Monitor only)
+- No mobile notifications – caregiver must monitor Serial output
+- Single pill box (multi-compartment requires hardware modification)
+- Time must be set manually if RTC battery is replaced
 
 ---
 
 ## 6. Future Enhancements
 
 1. **LCD Display** – Show current time and next pill schedule locally
-2. **OLED Screen** – Display medication name and countdown timer
+2. **WiFi Module (ESP8266)** – Add wireless notifications via Blynk or Telegram
 3. **Multiple Compartments** – Separate switches per compartment (Mon–Sun)
 4. **Voice Reminder** – DFPlayer Mini module for audio messages
-5. **Battery Backup** – LiPo battery with charging circuit
-6. **Web Dashboard** – Custom React dashboard instead of ThingSpeak
-7. **Telegram Bot** – Alternative to Blynk for caregiver alerts
+5. **Battery Backup** – 9V battery with low-battery detection
+6. **OLED Screen** – Display medication name and countdown timer
+7. **SD Card Logging** – Save adherence history to SD card
 8. **Deep Sleep Mode** – Reduce power consumption between reminders
-9. **OTA Updates** – Over-the-air firmware updates via WiFi
-10. **Multi-patient** – One gateway managing multiple pill boxes
+9. **Multi-patient** – One gateway managing multiple pill boxes
 
 ---
 
 ## 7. Conclusion
 
-The Smart Pill Reminder and Medicine Tracker successfully demonstrates the application of IoT technology in healthcare. The system integrates real-time clock management, WiFi connectivity, cloud notifications, and data logging into a compact, low-cost device built on the ESP8266 platform.
+The Smart Pill Reminder and Medicine Tracker successfully demonstrates the application of embedded systems in healthcare. The system integrates real-time clock management, local alert mechanisms, and user interaction into a compact, low-cost device built on the Arduino Uno platform.
 
-The device reliably triggers reminders at scheduled times, detects pill box interaction, handles user responses (confirm/snooze), and escalates to caregiver alerts when doses are missed. All events are logged to ThingSpeak for long-term adherence tracking.
+The device reliably triggers reminders at scheduled times, detects pill box interaction, handles user responses (confirm/snooze with a 3-snooze limit), and logs missed dose alerts to the Serial Monitor. All events are printed for local monitoring and caregiver awareness.
 
-This project addresses a real-world healthcare problem and demonstrates competency in embedded C++ programming, IoT protocols, cloud platform integration, and hardware-software co-design.
+This project addresses a real-world healthcare problem and demonstrates competency in embedded C++ programming, hardware-software co-design, and state machine implementation on a microcontroller platform.
 
 ---
 
 ## 8. References
 
-1. ESP8266 Technical Reference – Espressif Systems
-2. DS3231 Datasheet – Maxim Integrated
-3. Blynk IoT Documentation – blynk.cloud/documentation
-4. ThingSpeak API Documentation – mathworks.com/help/thingspeak
+1. Arduino Uno R3 Datasheet – arduino.cc
+2. ATmega328P Datasheet – Microchip Technology
+3. DS3231 Datasheet – Maxim Integrated
+4. Adafruit RTClib Library – github.com/adafruit/RTClib
 5. WHO Report on Medication Adherence – who.int
-6. Arduino RTClib Library – github.com/adafruit/RTClib
+6. Wokwi Arduino Simulator – wokwi.com
