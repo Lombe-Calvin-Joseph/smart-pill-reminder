@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "author": "Smart Pill Reminder",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-nodemcu",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ds1307",
+      "id": "rtc1",
+      "top": -120,
+      "left": 220,
+      "attrs": { "datetime": "2026-05-21 08:00:00" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buz1",
+      "top": -120,
+      "left": 380,
+      "attrs": { "volume": "0.5" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_red",
+      "top": 80,
+      "left": 380,
+      "attrs": { "color": "red", "label": "Morning" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_yellow",
+      "top": 130,
+      "left": 380,
+      "attrs": { "color": "yellow", "label": "Afternoon" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_green",
+      "top": 180,
+      "left": 380,
+      "attrs": { "color": "green", "label": "Evening" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_confirm",
+      "top": 260,
+      "left": 380,
+      "attrs": { "color": "green", "label": "Confirm" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_snooze",
+      "top": 320,
+      "left": 380,
+      "attrs": { "color": "yellow", "label": "Snooze" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_pillbox",
+      "top": 380,
+      "left": 380,
+      "attrs": { "color": "blue", "label": "Pill Box" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 80,
+      "left": 310,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 130,
+      "left": 310,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": 180,
+      "left": 310,
+      "attrs": { "value": "220" }
+    }
+  ],
+  "connections": [
+    ["esp:D1", "rtc1:SCL", "blue", []],
+    ["esp:D2", "rtc1:SDA", "green", []],
+    ["esp:3V3", "rtc1:VCC", "red", []],
+    ["esp:GND", "rtc1:GND", "black", []],
+
+    ["esp:D1", "buz1:1", "orange", []],
+    ["esp:GND", "buz1:2", "black", []],
+
+    ["esp:D2", "r1:1", "red", []],
+    ["r1:2", "led_red:A", "red", []],
+    ["led_red:K", "esp:GND", "black", []],
+
+    ["esp:D3", "r2:1", "yellow", []],
+    ["r2:2", "led_yellow:A", "yellow", []],
+    ["led_yellow:K", "esp:GND", "black", []],
+
+    ["esp:D4", "r3:1", "green", []],
+    ["r3:2", "led_green:A", "green", []],
+    ["led_green:K", "esp:GND", "black", []],
+
+    ["esp:D6", "btn_confirm:1.l", "purple", []],
+    ["btn_confirm:2.l", "esp:GND", "black", []],
+
+    ["esp:D7", "btn_snooze:1.l", "orange", []],
+    ["btn_snooze:2.l", "esp:GND", "black", []],
+
+    ["esp:D5", "btn_pillbox:1.l", "blue", []],
+    ["btn_pillbox:2.l", "esp:GND", "black", []]
+  ]
+}

@@ -11,6 +11,16 @@
  */
 
 // ─────────────────────────────────────────────
+//  BLYNK CREDENTIALS  ← Change these
+//  MUST be defined BEFORE including BlynkSimpleEsp8266.h
+//  Get these from blynk.cloud → your Template
+// ─────────────────────────────────────────────
+#define BLYNK_TEMPLATE_ID   "YOUR_TEMPLATE_ID"
+#define BLYNK_TEMPLATE_NAME "Smart Pill Reminder"
+#define BLYNK_AUTH_TOKEN    "YOUR_BLYNK_AUTH_TOKEN"
+#define BLYNK_PRINT Serial
+
+// ─────────────────────────────────────────────
 //  LIBRARIES
 // ─────────────────────────────────────────────
 #include <Arduino.h>
@@ -29,11 +39,6 @@
 const char* WIFI_SSID     = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 const int   WIFI_MAX_RETRIES = 10;
-
-// ─────────────────────────────────────────────
-//  BLYNK CREDENTIALS  ← Change these
-// ─────────────────────────────────────────────
-char BLYNK_AUTH_TOKEN[] = "YOUR_BLYNK_AUTH_TOKEN";
 
 // ─────────────────────────────────────────────
 //  THINGSPEAK CREDENTIALS  ← Change these
